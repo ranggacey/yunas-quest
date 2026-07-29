@@ -1,0 +1,22 @@
+{
+  "name": "Yuna's Quest",
+  "short_name": "YunasQuest",
+  "description": "2D Pixel RPG by Bos & Yuna",
+  "start_url": ".",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0a0a0a",
+  "theme_color": "#1a1a2e",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%231a1a2e'/%3E%3Ctext x='24' y='35' text-anchor='middle' font-size='30'%3E🗡%3C/text%3E%3C/svg%3E",
+      "sizes": "48x48",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%231a1a2e'/%3E%3Ctext x='96' y='140' text-anchor='middle' font-size='100'%3E🗡%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

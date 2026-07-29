@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Yuna's Quest - RPG</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -1125,11 +1128,31 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Touch D-Pad
-document.getElementById('dpad-up').addEventListener('pointerdown', (e) => { e.preventDefault(); handleKey(3); });
-document.getElementById('dpad-down').addEventListener('pointerdown', (e) => { e.preventDefault(); handleKey(0); });
-document.getElementById('dpad-left').addEventListener('pointerdown', (e) => { e.preventDefault(); handleKey(1); });
-document.getElementById('dpad-right').addEventListener('pointerdown', (e) => { e.preventDefault(); handleKey(2); });
+// Touch D-Pad with hold support
+['up','down','left','right'].forEach(dir => {
+  const el = document.getElementById('dpad-' + dir);
+  const dirmap = { up: 3, down: 0, left: 1, right: 2 };
+  let holdInterval = null;
+
+  const startMove = (e) => {
+    e.preventDefault();
+    handleKey(dirmap[dir]);
+    // Repeat while held
+    if (holdInterval) clearInterval(holdInterval);
+    holdInterval = setInterval(() => handleKey(dirmap[dir]), 180);
+  };
+  const stopMove = (e) => {
+    e.preventDefault();
+    if (holdInterval) { clearInterval(holdInterval); holdInterval = null; }
+  };
+
+  el.addEventListener('pointerdown', startMove);
+  el.addEventListener('pointerup', stopMove);
+  el.addEventListener('pointerleave', stopMove);
+  el.addEventListener('pointercancel', stopMove);
+  // Prevent context menu on long press
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+});
 document.getElementById('btn-a').addEventListener('pointerdown', (e) => { e.preventDefault(); nextDialog(); });
 document.getElementById('btn-b').addEventListener('pointerdown', (e) => { e.preventDefault(); showDialog({ name: '📋 Info', dialog: ['Yuna\'s Quest v1.0', 'RPG by Bos & Yuna ❤️', 'React + Canvas + Love'] }); });
 
