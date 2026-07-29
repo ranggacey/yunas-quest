@@ -1184,8 +1184,10 @@ window.addEventListener('orientationchange', () => {
 generateMap();
 spawnEnemies();
 resize();
-player.x = 6;
-player.y = 8;
+player.x = 9;
+player.y = 8; // start di halaman (PATH)
+player.px = 0;
+player.py = 0;
 
 // Show intro dialog
 setTimeout(() => {
