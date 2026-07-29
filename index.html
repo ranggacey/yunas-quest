@@ -17,19 +17,55 @@
     overflow: hidden;
     user-select: none;
   }
+
+  /* Landscape lock overlay */
+  #rotate-hint {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    z-index: 1000;
+    color: white;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    text-align: center;
+    padding: 20px;
+  }
+  #rotate-hint .icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+    animation: rotate 2s infinite;
+  }
+  @keyframes rotate {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(90deg); }
+  }
+
+  @media (orientation: portrait) and (pointer: coarse) {
+    #rotate-hint { display: flex; }
+    #game-container { display: none !important; }
+  }
   #game-container {
     position: relative;
     background: #1a1a2e;
     border-radius: 12px;
     box-shadow: 0 0 60px rgba(100, 50, 200, 0.3);
     overflow: hidden;
+    width: 100vw;
+    height: 100dvh;
     max-width: 100vw;
     max-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   canvas {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: contain;
     image-rendering: pixelated;
   }
   #ui-overlay {
@@ -185,14 +221,34 @@
     @keyframes fadeOut { to { opacity: 0; } }
   }
 
+  /* Bigger D-Pad for mobile */
+  @media (pointer: coarse) and (orientation: landscape) {
+    #dpad { width: 160px; height: 160px; }
+    .dpad-btn { width: 50px; height: 50px; font-size: 22px; border-radius: 12px; }
+    .action-btn { width: 60px; height: 60px; font-size: 22px; }
+    #ui-overlay { padding: 15px 20px; }
+  }
+
   @media (max-width: 480px) {
     #dpad { width: 120px; height: 120px; }
     .dpad-btn { width: 38px; height: 38px; font-size: 16px; }
     .action-btn { width: 44px; height: 44px; font-size: 15px; }
   }
+
+  /* Force landscape on mobile - use screen rotation API */
+  @media (orientation: portrait) and (pointer: coarse) {
+    #rotate-hint { display: flex; }
+    #game-container { display: none !important; }
+  }
 </style>
 </head>
 <body>
+
+<div id="rotate-hint">
+  <div class="icon">📱</div>
+  <div>Putar HP ke <strong>landscape</strong></div>
+  <div style="margin-top:8px;font-size:13px;color:#888;">atau miringkan HP</div>
+</div>
 
 <div id="game-container">
   <canvas id="game"></canvas>
@@ -1080,26 +1136,26 @@ document.getElementById('btn-b').addEventListener('pointerdown', (e) => { e.prev
 // Resize handler
 function resize() {
   const container = document.getElementById('game-container');
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const ratio = 16 / 9;
-
-  let w, h;
-  if (vw / vh > ratio) {
-    h = vh;
-    w = h * ratio;
-  } else {
-    w = vw;
-    h = w / ratio;
-  }
-
-  canvas.width = 320; // Fixed game resolution
+  // Fill entire viewport
+  canvas.width = 320;
   canvas.height = 180;
-  container.style.width = Math.floor(w) + 'px';
-  container.style.height = Math.floor(h) + 'px';
+}
+
+// Try to lock orientation on mobile
+function lockOrientation() {
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+    }
+  } catch(e) {}
 }
 
 window.addEventListener('resize', resize);
+
+// Also listen for orientation change to hide hint
+window.addEventListener('orientationchange', () => {
+  setTimeout(resize, 300);
+});
 
 // --- Initialize ---
 generateMap();
