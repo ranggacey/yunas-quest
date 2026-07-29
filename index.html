@@ -523,8 +523,11 @@ function generateMap() {
   for (let r = 5; r <= 10; r++) {
     for (let c = 4; c <= 10; c++) {
       if (r >= 7 && r <= 8 && c >= 7 && c <= 8) continue; // house interior
-      if (c === 4 || c === 10 || r === 5 || r === 10) {
+      // Gap in fence for south path connection
+      if ((c === 4 || c === 10 || r === 5) && !(r === 10 && c >= 5 && c <= 8)) {
         mapData[r][c] = T.FENCE;
+      } else if (r === 10 && c >= 5 && c <= 8) {
+        mapData[r][c] = T.PATH; // gap for path
       } else {
         mapData[r][c] = T.PATH;
       }
