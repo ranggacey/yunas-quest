@@ -294,8 +294,15 @@ const ctx = canvas.getContext('2d');
 const TILE = 16;
 const MAP_COLS = 40;
 const MAP_ROWS = 30;
-const VIEW_W = 20; // tiles visible horizontally
-const VIEW_H = 15; // tiles visible vertically
+const VIEW_W = 20;
+const VIEW_H = 15;
+const RENDER_SCALE = 2; // 2x HD
+
+// HD buffer
+const hdCanvas = document.createElement('canvas');
+const hdCtx = hdCanvas.getContext('2d');
+hdCanvas.width = 320;
+hdCanvas.height = 180;
 
 // --- Tile Types ---
 const T = {
@@ -803,15 +810,14 @@ let animTimer = 0;
 
 function render() {
   const W = canvas.width;
-  const H = canvas.height;
-  const scale = W / (VIEW_W * TILE);
+  const W = hdCanvas.width;
+  const H = hdCanvas.height;
 
-  ctx.fillStyle = '#0a0a1a';
-  ctx.fillRect(0, 0, W, H);
+  hdCtx.fillStyle = '#0a0a1a';
+  hdCtx.fillRect(0, 0, W, H);
 
-  ctx.save();
-  ctx.scale(scale, scale);
-  ctx.translate(-camera.x, -camera.y);
+  hdCtx.save();
+  hdCtx.translate(-camera.x, -camera.y);
 
   // Determine visible tile range
   const startCol = Math.max(0, Math.floor(camera.x / TILE) - 1);
@@ -824,7 +830,7 @@ function render() {
     for (let col = startCol; col < endCol; col++) {
       if (row >= 0 && row < MAP_ROWS && col >= 0 && col < MAP_COLS) {
         const seed = row * 31 + col * 17;
-        drawProceduralTile(ctx, col, row, mapData[row][col], seed);
+        drawProceduralTile(hdCtx, col, row, mapData[row][col], seed);
       }
     }
   }
@@ -834,9 +840,9 @@ function render() {
     for (let col = startCol; col < endCol; col++) {
       if (row >= 0 && row < MAP_ROWS && col >= 0 && col < MAP_COLS) {
         if (mapData[row][col] === T.CHEST) {
-          ctx.fillStyle = '#ffcc00';
-          ctx.font = '8px monospace';
-          ctx.fillText('?', col * TILE + 4, row * TILE + 12);
+          hdCtx.fillStyle = '#ffcc00';
+          hdCtx.font = '8px monospace';
+          hdCtx.fillText('?', col * TILE + 4, row * TILE + 12);
         }
       }
     }
@@ -847,9 +853,9 @@ function render() {
     if (enemy.dead) continue;
     const ex = enemy.x * TILE;
     const ey = enemy.y * TILE;
-    if (ex >= camera.x - TILE && ex <= camera.x + W/scale + TILE &&
-        ey >= camera.y - TILE && ey <= camera.y + H/scale + TILE) {
-      drawEnemy(ctx, enemy.x, enemy.y, enemy, 1);
+    if (ex >= camera.x - TILE && ex <= camera.x + W + TILE &&
+        ey >= camera.y - TILE && ey <= camera.y + H + TILE) {
+      drawEnemy(hdCtx, enemy.x, enemy.y, enemy, 1);
     }
   }
 
@@ -857,37 +863,40 @@ function render() {
   for (const npc of npcs) {
     const nx = npc.x * TILE;
     const ny = npc.y * TILE;
-    if (nx >= camera.x - TILE && nx <= camera.x + W/scale + TILE &&
-        ny >= camera.y - TILE && ny <= camera.y + H/scale + TILE) {
-      drawCharacter(ctx, npc.x, npc.y,
+    if (nx >= camera.x - TILE && nx <= camera.x + W + TILE &&
+        ny >= camera.y - TILE && ny <= camera.y + H + TILE) {
+      drawCharacter(hdCtx, npc.x, npc.y,
         PALETTE.npc.skin, npc.id === 'wizard' ? '#c8c8c8' : PALETTE.npc.hair1,
         npc.id === 'seller' ? '#c07050' : npc.id === 'guards' ? '#d0d0d0' : PALETTE.npc.shirt1,
         '#4a3a28', npc.dir, 0, 1);
       // Name tag
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(nx, ny - 8, TILE * 1.5, 7);
-      ctx.fillStyle = '#fff';
-      ctx.font = '6px monospace';
-      ctx.fillText(npc.name, nx + 2, ny - 3);
+      hdCtx.fillStyle = 'rgba(0,0,0,0.6)';
+      hdCtx.fillRect(nx, ny - 8, TILE * 1.5, 7);
+      hdCtx.fillStyle = '#fff';
+      hdCtx.font = '6px monospace';
+      hdCtx.fillText(npc.name, nx + 2, ny - 3);
     }
   }
 
   // Draw player
-  const pScale = 1;
-  drawCharacter(ctx, player.x, player.y,
+  drawCharacter(hdCtx, player.x, player.y,
     PALETTE.player.skin, PALETTE.player.hair, PALETTE.player.shirt,
-    PALETTE.player.pants, player.dir, player.frame, pScale);
+    PALETTE.player.pants, player.dir, player.frame, 1);
 
   // Draw player name
-  ctx.save();
-  ctx.font = '7px monospace';
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(player.x * TILE, player.y * TILE - 9, TILE + 8, 8);
-  ctx.fillStyle = '#7ff';
-  ctx.fillText('Yuna', player.x * TILE + 2, player.y * TILE - 3);
-  ctx.restore();
+  hdCtx.save();
+  hdCtx.font = '7px monospace';
+  hdCtx.fillStyle = 'rgba(0,0,0,0.5)';
+  hdCtx.fillRect(player.x * TILE, player.y * TILE - 9, TILE + 8, 8);
+  hdCtx.fillStyle = '#7ff';
+  hdCtx.fillText('Yuna', player.x * TILE + 2, player.y * TILE - 3);
+  hdCtx.restore();
 
-  ctx.restore();
+  hdCtx.restore();
+
+  // Blit to main canvas at 2x with nearest-neighbor
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(hdCanvas, 0, 0, canvas.width, canvas.height);
 }
 
 // --- Movement ---
@@ -1161,10 +1170,10 @@ document.getElementById('btn-b').addEventListener('pointerdown', (e) => { e.prev
 
 // Resize handler
 function resize() {
-  const container = document.getElementById('game-container');
-  // Fill entire viewport
-  canvas.width = 320;
-  canvas.height = 180;
+  // Main canvas: 2x HD
+  canvas.width = 640;
+  canvas.height = 360;
+  ctx.imageSmoothingEnabled = false;
 }
 
 // Try to lock orientation on mobile
